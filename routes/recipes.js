@@ -1,11 +1,32 @@
 const express = require("express");
 const fs = require("fs");
+const {
+  Validator,
+  ValidationError,
+} = require("express-json-validator-middleware");
 
 const utils = require("../utils/json-reader");
 
 const router = express.Router();
 
-router.get("/", (_req, res) => {
+const recipeSchema = {
+  type: "object",
+  required: ["name", "ingredients", "instructions"],
+  name: {
+    type: "string",
+    minLength: 2,
+  },
+  ingredients: {
+    type: "array",
+  },
+  instructions: {
+    type: "array",
+  },
+};
+
+const { validate } = new Validator();
+
+router.get("/", (req, res) => {
   console.log("GET request /recipes");
 
   utils.jsonReader("./utils/data.json", (err, data) => {
@@ -48,7 +69,7 @@ router.get("/details/:name", (req, res) => {
   });
 });
 
-router.post("/", (req, res) => {
+router.post("/", validate({ body: recipeSchema }), (req, res) => {
   console.log("POST request /recipes with body:\n", req.body);
 
   utils.jsonReader("./utils/data.json", (err, data) => {
@@ -77,7 +98,7 @@ router.post("/", (req, res) => {
   });
 });
 
-router.put("/", (req, res) => {
+router.put("/", validate({ body: recipeSchema }), (req, res) => {
   console.log("PUT request /recipes with body:\n", req.body);
 
   utils.jsonReader("./utils/data.json", (err, data) => {
@@ -107,6 +128,12 @@ router.put("/", (req, res) => {
     });
     res.status(204).send();
   });
+});
+
+router.use((error, req, res, next) => {
+  if (error instanceof ValidationError) {
+    res.status(400).send({ error: "Incorrect request body format" });
+  }
 });
 
 module.exports = router;
