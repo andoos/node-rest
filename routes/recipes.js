@@ -8,8 +8,9 @@ const router = express.Router();
 router.get("/", (_req, res) => {
   console.log("GET request /recipes");
 
-  utils.jsonReader("./data.json", (err, data) => {
+  utils.jsonReader("./utils/data.json", (err, data) => {
     if (err) {
+      console.log(err);
       res.status(500).send({ error: "An error occured reading from database" });
       return;
     }
@@ -23,7 +24,7 @@ router.get("/", (_req, res) => {
 router.get("/details/:name", (req, res) => {
   console.log("GET request /recipes/details/" + req.params.name);
 
-  utils.jsonReader("./data.json", (err, data) => {
+  utils.jsonReader("./utils/data.json", (err, data) => {
     if (err) {
       res.status(500).send({ error: "An error occured reading from database" });
       return;
@@ -50,7 +51,7 @@ router.get("/details/:name", (req, res) => {
 router.post("/", (req, res) => {
   console.log("POST request /recipes with body:\n", req.body);
 
-  utils.jsonReader("./data.json", (err, data) => {
+  utils.jsonReader("./utils/data.json", (err, data) => {
     if (err) {
       res.status(500).send({ error: "An error occured reading from database" });
       return;
@@ -65,7 +66,7 @@ router.post("/", (req, res) => {
 
     data["recipes"].push(req.body);
 
-    fs.writeFile("./data.json", JSON.stringify(data, null, 4), (err) => {
+    fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4), (err) => {
       if (err) {
         res.status(500).send({ error: "An error occured writing to database" });
         return;
@@ -79,7 +80,7 @@ router.post("/", (req, res) => {
 router.put("/", (req, res) => {
   console.log("PUT request /recipes with body:\n", req.body);
 
-  utils.jsonReader("./data.json", (err, data) => {
+  utils.jsonReader("./utils/data.json", (err, data) => {
     if (err) {
       console.log(err);
       res.status(500).send({ error: "An error occured reading from database" });
@@ -98,7 +99,7 @@ router.put("/", (req, res) => {
     data.recipes[idx].ingredients = req.body.ingredients;
     data.recipes[idx].instructions = req.body.instructions;
 
-    fs.writeFile("./data.json", JSON.stringify(data, null, 4), (err) => {
+    fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4), (err) => {
       if (err) {
         res.status(500).send({ error: "An error occured writing to database" });
         return;

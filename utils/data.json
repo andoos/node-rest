@@ -46,17 +46,6 @@
                 "Add tea leaves/tea bags, chai masala; mix and steep for 3-4 minutes",
                 "Remove mixture from heat; strain and enjoy"
             ]
-        },
-        {
-            "name": "butteredBagel",
-            "ingredients": [
-                "1 bagel",
-                "2 tbsp butter"
-            ],
-            "instructions": [
-                "cut the bagel",
-                "spread butter on bagel"
-            ]
         }
     ]
 }
