@@ -1,10 +1,6 @@
 const express = require("express");
 const fs = require("fs");
-const {
-  Validator,
-  ValidationError,
-} = require("express-json-validator-middleware");
-
+const { Validator } = require("express-json-validator-middleware");
 const utils = require("../utils/json-reader");
 
 const router = express.Router();
@@ -14,13 +10,18 @@ const recipeSchema = {
   required: ["name", "ingredients", "instructions"],
   name: {
     type: "string",
-    minLength: 2,
   },
   ingredients: {
     type: "array",
+    items: {
+      type: "string",
+    },
   },
   instructions: {
     type: "array",
+    items: {
+      type: "string",
+    },
   },
 };
 
@@ -29,27 +30,22 @@ const { validate } = new Validator();
 router.get("/", (req, res) => {
   console.log("GET request /recipes");
 
-  utils.jsonReader("./utils/data.json", (err, data) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send({ error: "An error occured reading from database" });
-      return;
-    }
+  try {
+    const data = utils.jsonReader("./utils/data.json");
 
     const recipeNames = data.recipes.map((recipe) => recipe.name);
 
     res.status(200).send({ recipeNames });
-  });
+  } catch (err) {
+    res.status(500).send({ error: "An error occured reading from database" });
+  }
 });
 
 router.get("/details/:name", (req, res) => {
   console.log("GET request /recipes/details/" + req.params.name);
 
-  utils.jsonReader("./utils/data.json", (err, data) => {
-    if (err) {
-      res.status(500).send({ error: "An error occured reading from database" });
-      return;
-    }
+  try {
+    const data = utils.jsonReader("./utils/data.json");
 
     const recipe = data.recipes.find(
       (recipe) => recipe.name === req.params.name
@@ -66,17 +62,16 @@ router.get("/details/:name", (req, res) => {
         numSteps: recipe.ingredients.length,
       },
     });
-  });
+  } catch (err) {
+    res.status(500).send({ error: "An error occured reading from database" });
+  }
 });
 
 router.post("/", validate({ body: recipeSchema }), (req, res) => {
   console.log("POST request /recipes with body:\n", req.body);
 
-  utils.jsonReader("./utils/data.json", (err, data) => {
-    if (err) {
-      res.status(500).send({ error: "An error occured reading from database" });
-      return;
-    }
+  try {
+    const data = utils.jsonReader("./utils/data.json");
 
     const recipe = data.recipes.find((recipe) => recipe.name === req.body.name);
 
@@ -87,26 +82,23 @@ router.post("/", validate({ body: recipeSchema }), (req, res) => {
 
     data["recipes"].push(req.body);
 
-    fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4), (err) => {
-      if (err) {
-        res.status(500).send({ error: "An error occured writing to database" });
-        return;
-      }
-    });
+    try {
+      fs.writeFileSync("./utils/data.json", JSON.stringify(data, null, 4));
+    } catch (err) {
+      res.status(500).send({ error: "An error occured writing to database" });
+    }
 
     res.status(201).send();
-  });
+  } catch (err) {
+    res.status(500).send({ error: "An error occured reading from database" });
+  }
 });
 
 router.put("/", validate({ body: recipeSchema }), (req, res) => {
   console.log("PUT request /recipes with body:\n", req.body);
 
-  utils.jsonReader("./utils/data.json", (err, data) => {
-    if (err) {
-      console.log(err);
-      res.status(500).send({ error: "An error occured reading from database" });
-      return;
-    }
+  try {
+    const data = utils.jsonReader("./utils/data.json");
 
     const idx = data.recipes.findIndex(
       (recipes) => recipes.name === req.body.name
@@ -120,19 +112,15 @@ router.put("/", validate({ body: recipeSchema }), (req, res) => {
     data.recipes[idx].ingredients = req.body.ingredients;
     data.recipes[idx].instructions = req.body.instructions;
 
-    fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4), (err) => {
-      if (err) {
-        res.status(500).send({ error: "An error occured writing to database" });
-        return;
-      }
-    });
-    res.status(204).send();
-  });
-});
+    try {
+      fs.writeFileSync("./utils/data.json", JSON.stringify(data, null, 4));
+    } catch (err) {
+      res.status(500).send({ error: "An error occured writing to database" });
+    }
 
-router.use((error, req, res, next) => {
-  if (error instanceof ValidationError) {
-    res.status(400).send({ error: "Incorrect request body format" });
+    res.status(204).send();
+  } catch (err) {
+    res.status(500).send({ error: "An error occured reading from database" });
   }
 });
 

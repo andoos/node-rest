@@ -1,17 +1,13 @@
 const fs = require("fs");
 
-function jsonReader(path, cb) {
-  fs.readFile(path, (err, fileData) => {
-    if (err) {
-      return cb && cb(err);
-    }
-    try {
-      const object = JSON.parse(fileData);
-      return cb && cb(null, object);
-    } catch (err) {
-      return cb && cb(err);
-    }
-  });
+function jsonReader(path) {
+  try {
+    const fileData = fs.readFileSync(path);
+    const object = JSON.parse(fileData);
+    return object;
+  } catch (err) {
+    return err;
+  }
 }
 
 module.exports = { jsonReader };
