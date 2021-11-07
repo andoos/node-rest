@@ -1,9 +1,9 @@
-const fs = require("fs");
+const fs = require("fs").promises;
 
-function jsonReader(path) {
+async function jsonReader(path) {
   try {
-    const fileData = fs.readFileSync(path);
-    const object = JSON.parse(fileData);
+    const fileData = await fs.readFile(path);
+    const object = await JSON.parse(fileData);
     return object;
   } catch (err) {
     return err;

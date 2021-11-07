@@ -1,5 +1,5 @@
 const express = require("express");
-const fs = require("fs");
+const fs = require("fs").promises;
 const { Validator } = require("express-json-validator-middleware");
 const utils = require("../utils/json-reader");
 
@@ -27,13 +27,13 @@ const recipeSchema = {
 
 const { validate } = new Validator();
 
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   console.log("GET request /recipes");
 
   try {
-    const data = utils.jsonReader("./utils/data.json");
+    const data = await utils.jsonReader("./utils/data.json");
 
-    const recipeNames = data.recipes.map((recipe) => recipe.name);
+    const recipeNames = await data.recipes.map((recipe) => recipe.name);
 
     res.status(200).send({ recipeNames });
   } catch (err) {
@@ -41,13 +41,13 @@ router.get("/", (req, res) => {
   }
 });
 
-router.get("/details/:name", (req, res) => {
+router.get("/details/:name", async (req, res) => {
   console.log("GET request /recipes/details/" + req.params.name);
 
   try {
-    const data = utils.jsonReader("./utils/data.json");
+    const data = await utils.jsonReader("./utils/data.json");
 
-    const recipe = data.recipes.find(
+    const recipe = await data.recipes.find(
       (recipe) => recipe.name === req.params.name
     );
 
@@ -67,23 +67,25 @@ router.get("/details/:name", (req, res) => {
   }
 });
 
-router.post("/", validate({ body: recipeSchema }), (req, res) => {
+router.post("/", validate({ body: recipeSchema }), async (req, res) => {
   console.log("POST request /recipes with body:\n", req.body);
 
   try {
-    const data = utils.jsonReader("./utils/data.json");
+    const data = await utils.jsonReader("./utils/data.json");
 
-    const recipe = data.recipes.find((recipe) => recipe.name === req.body.name);
+    const recipe = await data.recipes.find(
+      (recipe) => recipe.name === req.body.name
+    );
 
     if (recipe) {
       res.status(400).send({ error: "Recipe already exists" });
       return;
     }
 
-    data["recipes"].push(req.body);
+    await data["recipes"].push(req.body);
 
     try {
-      fs.writeFileSync("./utils/data.json", JSON.stringify(data, null, 4));
+      fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4));
     } catch (err) {
       res.status(500).send({ error: "An error occured writing to database" });
     }
@@ -94,13 +96,13 @@ router.post("/", validate({ body: recipeSchema }), (req, res) => {
   }
 });
 
-router.put("/", validate({ body: recipeSchema }), (req, res) => {
+router.put("/", validate({ body: recipeSchema }), async (req, res) => {
   console.log("PUT request /recipes with body:\n", req.body);
 
   try {
-    const data = utils.jsonReader("./utils/data.json");
+    const data = await utils.jsonReader("./utils/data.json");
 
-    const idx = data.recipes.findIndex(
+    const idx = await data.recipes.findIndex(
       (recipes) => recipes.name === req.body.name
     );
 
@@ -113,7 +115,7 @@ router.put("/", validate({ body: recipeSchema }), (req, res) => {
     data.recipes[idx].instructions = req.body.instructions;
 
     try {
-      fs.writeFileSync("./utils/data.json", JSON.stringify(data, null, 4));
+      fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4));
     } catch (err) {
       res.status(500).send({ error: "An error occured writing to database" });
     }
