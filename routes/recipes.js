@@ -1,7 +1,7 @@
 const express = require("express");
 const fs = require("fs").promises;
 const { Validator } = require("express-json-validator-middleware");
-const utils = require("../utils/json-reader");
+const utils = require("../utils/jsonReader");
 
 const router = express.Router();
 
@@ -82,7 +82,7 @@ router.post("/", validate({ body: recipeSchema }), async (req, res) => {
       return;
     }
 
-    await data["recipes"].push(req.body);
+    data["recipes"].push(req.body);
 
     try {
       fs.writeFile("./utils/data.json", JSON.stringify(data, null, 4));
